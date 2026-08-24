@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Timer & Tracker</title>
+    <style>
+        :root {
+            /* สีหลัก (ใช้ได้ทั้ง 2 ธีม) */
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --secondary: #10B981;
+            --secondary-hover: #059669;
+            --warning: #F59E0B;
+            --warning-hover: #D97706;
+            --neutral: #6B7280;
+            --neutral-hover: #4B5563;
+            --danger: #EF4444;
+            --danger-hover: #DC2626;
+            --rose: #F43F5E;
+            --rose-hover: #E11D48;
+            --info: #3B82F6;
+            --info-hover: #2563EB;
+
+            /* สีโทนสว่าง (Light Theme) */
+            --bg: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text: #1F2937;
+            --border: #E5E7EB;
+            --td-text: #4B5563;
+            --empty-text: #9CA3AF;
+            --input-bg: #FFFFFF;
+        }
+
+        /* สีโทนมืด (Dark Theme) */
+        body.dark-theme {
+            --bg: #111827;
+            --card-bg: #1F2937;
+            --text: #F9FAFB;
+            --border: #374151;
+            --td-text: #D1D5DB;
+            --empty-text: #6B7280;
+            --input-bg: #374151;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            box-sizing: border-box;
+            position: relative; 
+            transition: background-color 0.3s;
+        }
+
+        /* ส่วนควบคุมมุมขวาบน */
+        .top-controls {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        select.lang-select {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            font-weight: 600;
+            background-color: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 0;
+            padding-right: 120px; 
+            padding-left: 120px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap; 
+        }
+
+        .input-row > input[type="text"], .input-row > select {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 1rem;
+            outline: none;
+            background-color: var(--input-bg);
+            color: var(--text);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            text-align: center;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--primary);
+        }
+
+        .time-separator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add { background-color: var(--secondary); color: white; white-space: nowrap; }
+        .btn-add:hover { background-color: var(--secondary-hover); }
+
+        .btn-load { background-color: var(--info); color: white; white-space: nowrap; }
+        .btn-load:hover { background-color: var(--info-hover); }
+
+        .btn-delete { background-color: var(--danger); color: white; white-space: nowrap; }
+        .btn-delete:hover { background-color: var(--danger-hover); }
+
+        .btn-export { background-color: #16A34A; color: white; margin-top: 16px; width: 100%; font-size: 1.1rem; padding: 14px; }
+        .btn-export:hover { background-color: #15803D; }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--primary);
+            font-variant-numeric: tabular-nums;
+            margin: 10px 0 20px 0;
+        }
+
+        /* ตารางปุ่มกด 2x2 */
+        .action-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .action-buttons-grid button {
+            padding: 16px 8px;
+            font-size: 1.05rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-action { background-color: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3); }
+        .btn-action:hover { background-color: var(--primary-hover); }
+        .btn-action:active { transform: scale(0.98); }
+
+        .btn-timer-start { background-color: var(--warning); color: white; box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3); }
+        .btn-timer-start:hover { background-color: var(--warning-hover); }
+        .btn-timer-start:active { transform: scale(0.98); }
+        .btn-timer-start:disabled { background-color: #9CA3AF; cursor: not-allowed; box-shadow: none; }
+
+        .btn-undo { background-color: var(--rose); color: white; box-shadow: 0 4px 6px -1px rgba(244, 63, 94, 0.3); }
+        .btn-undo:hover { background-color: var(--rose-hover); }
+        .btn-undo:active { transform: scale(0.98); }
+
+        .btn-next { background-color: var(--neutral); color: white; box-shadow: 0 4px 6px -1px rgba(107, 114, 128, 0.3); }
+        .btn-next:hover { background-color: var(--neutral-hover); }
+        .btn-next:active { transform: scale(0.98); }
+
+        /* Table Styles */
+        .table-container { 
+            overflow-x: auto; 
+            position: relative; 
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+            min-width: 600px; 
+        }
+        
+        th, td { 
+            border: 1px solid var(--border); 
+            padding: 12px; 
+            text-align: center; 
+        }
+        
+        th { 
+            background-color: var(--bg); 
+            font-weight: 600; 
+            white-space: nowrap; 
+        }
+        
+        td { color: var(--td-text); }
+        .empty-cell { color: var(--empty-text); font-style: italic; }
+        .empty-state { color: var(--empty-text); font-weight: normal; }
+
+        /* Sticky Column */
+        th:first-child, td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        th:first-child { background-color: var(--bg); }
+        td:first-child { background-color: var(--card-bg); }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text);
+            padding: 32px 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-content h2 { 
+            margin-top: 0; 
+            color: var(--primary); 
+            font-size: 1.4rem;
+        }
+        .modal-content p { 
+            white-space: pre-line; 
+            margin-bottom: 24px; 
+            line-height: 1.5; 
+            color: var(--text);
+        }
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-buttons button {
+            width: 100%;
+            padding: 14px;
+            font-size: 1.05rem;
+        }
+
+        @media (max-width: 550px) {
+            .action-buttons-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.25rem; padding-top: 40px; padding-left: 0; padding-right: 0;}
+            .top-controls { top: 15px; right: 15px; }
+            .input-row > button { width: 100%; }
+            .input-row { flex-direction: column; align-items: stretch; }
+            .input-row.timer-inputs { flex-direction: row; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- มุมขวาบน ควบคุมธีมและภาษา -->
+        <div class="top-controls">
+            <button id="themeToggleBtn" class="icon-btn" onclick="toggleTheme()" title="สลับธีม สว่าง/มืด">🌙</button>
+            <select id="langSelect" class="lang-select" onchange="changeLanguage()">
+                <option value="th">🇹🇭 TH</option>
+                <option value="en">🇬🇧 EN</option>
+            </select>
+        </div>
+
+        <h1 id="appTitle">🏋️ Workout Timer & Tracker</h1>
+
+        <!-- Workout Controls -->
+        <div class="section">
+            
+            <div class="control-group">
+                <label id="lblStep1">1. เพิ่มท่าออกกำลังกาย (พิมพ์เอง หรือ เลือกกลุ่มท่า):</label>
+                <!-- พิมพ์ชื่อท่าเอง -->
+                <div class="input-row">
+                    <input type="text" id="newExerciseInput" placeholder="พิมพ์ชื่อท่าที่ต้องการ...">
+                    <button class="btn-add" id="btnAdd" onclick="addExercise()">+ เพิ่มทีละท่า</button>
+                </div>
+                <!-- เลือกกลุ่มท่าพื้นฐาน -->
+                <div class="input-row" style="margin-top: 4px;">
+                    <select id="presetGroupSelect">
+                        <option value="" disabled selected id="optPresetDef">-- เลือกโหลดกลุ่มท่าพื้นฐาน --</option>
+                        <option value="chest-back" id="optChest">💪 กลุ่ม Chest-Back (8 ท่า)</option>
+                        <option value="shoulder-arm" id="optShoulder">🏋️ กลุ่ม Shoulder-Arm (9 ท่า)</option>
+                        <option value="abs-leg" id="optAbs">🦵 กลุ่ม Abs-Leg (5 ท่า)</option>
+                    </select>
+                    <button class="btn-load" id="btnLoad" onclick="loadPresetGroup()">📥 โหลดกลุ่ม</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label for="exerciseSelect" id="lblStep2">2. เลือกท่าที่กำลังเล่นอยู่ตอนนี้:</label>
+                <div class="input-row">
+                    <select id="exerciseSelect">
+                        <option value="" disabled selected>-- กรุณาเพิ่มท่าด้านบนก่อน --</option>
+                    </select>
+                    <button class="btn-delete" id="btnDelete" onclick="deleteExercise()">🗑️ ลบท่านี้</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label id="lblStep3">3. ตั้งเวลาพัก (นาที : วินาที):</label>
+                <div class="input-row timer-inputs">
+                    <input type="number" id="restMin" value="1" min="0" placeholder="นาที" onchange="updateBtnText()" onkeyup="updateBtnText()">
+                    <span class="time-separator">:</span>
+                    <input type="number" id="restSec" value="20" min="0" max="59" placeholder="วินาที" onchange="updateBtnText()" onkeyup="updateBtnText()">
+                </div>
+            </div>
+
+            <div class="timer-display" id="timer">00:00</div>
+            
+            <!-- ปุ่มควบคุมแบบ Grid 2x2 -->
+            <div class="action-buttons-grid">
+                <button class="btn-action" id="btnFinish" onclick="finishSet()">✅ จบ Set (บันทึกเวลา)</button>
+                <button class="btn-timer-start" id="startTimerBtn" onclick="startRestTimerClick()">⏱️ เริ่มพัก (01:20)</button>
+                <button class="btn-undo" id="btnUndo" onclick="undoLastSet()">⏪ ลบ Set ล่าสุด</button>
+                <button class="btn-next" id="btnNext" onclick="nextExercise()">⏭️ ขึ้นท่าใหม่</button>
+            </div>
+        </div>
+
+        <!-- Result Table -->
+        <div class="section">
+            <h2 id="tableTitle">📊 ตารางบันทึกเวลา (hh:mm)</h2>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr id="tableHeader">
+                            <th>Set / ท่า</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="btn-export" id="btnExport" onclick="exportToCSV()">📤 ส่งออกข้อมูล (.csv สำหรับ Google Sheet)</button>
+        </div>
+    </div>
+
+    <!-- Modal เมื่อทำครบทุกท่า -->
+    <div id="completionModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalTitle">🎉 ยินดีด้วย! ออกกำลังกายครบแล้ว</h2>
+            <p id="modalText">คุณทำครบทุกท่าที่บันทึกไว้ในรายการแล้ว<br>ต้องการบันทึกข้อมูล หรือเพิ่มท่าใหม่เพื่อเล่นต่อ?</p>
+            <div class="modal-buttons">
+                <button class="btn-export" id="modalBtnExport" onclick="modalExportCSV()">📥 ส่งออกเป็นไฟล์ .csv</button>
+                <button class="btn-action" id="modalBtnAdd" onclick="modalAddNew()">➕ พิมพ์เพิ่มท่าใหม่</button>
+                <button class="btn-next" id="modalBtnClose" onclick="closeCompletionModal()">❌ ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 🎨 Theme Toggle Logic ---
+        function toggleTheme() {
+            const body = document.body;
+            const themeBtn = document.getElementById('themeToggleBtn');
+            body.classList.toggle('dark-theme');
+
+            if (body.classList.contains('dark-theme')) {
+                themeBtn.innerText = '☀️';
+                localStorage.setItem('workoutAppTheme', 'dark');
+            } else {
+                themeBtn.innerText = '🌙';
+                localStorage.setItem('workoutAppTheme', 'light');
+            }
+        }
+
+        const savedTheme = localStorage.getItem('workoutAppTheme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            document.getElementById('themeToggleBtn').innerText = '☀️';
+        }
+
+        // --- 🌐 Localization (Translations) ---
+        const i18n = {
+            th: {
+                appTitle: "🏋️ Workout Timer & Tracker",
+                lblStep1: "1. เพิ่มท่าออกกำลังกาย (พิมพ์เอง หรือ เลือกกลุ่มท่า):",
+                placeholderInput: "พิมพ์ชื่อท่าที่ต้องการ...",
+                btnAdd: "+ เพิ่มทีละท่า",
+                optPresetDef: "-- เลือกโหลดกลุ่มท่าพื้นฐาน --",
+                optChest: "💪 กลุ่ม Chest-Back (8 ท่า)",
+                optShoulder: "🏋️ กลุ่ม Shoulder-Arm (9 ท่า)",
+                optAbs: "🦵 กลุ่ม Abs-Leg (5 ท่า)",
+                btnLoad: "📥 โหลดกลุ่ม",
+                lblStep2: "2. เลือกท่าที่กำลังเล่นอยู่ตอนนี้:",
+                btnDelete: "🗑️ ลบท่านี้",
+                lblStep3: "3. ตั้งเวลาพัก (นาที : วินาที):",
+                placeholderMin: "นาที",
+                placeholderSec: "วินาที",
+                btnFinish: "✅ จบ Set (บันทึกเวลา)",
+                btnStartRest: "⏱️ เริ่มพัก",
+                btnTimerRunning: "กำลังจับเวลา...",
+                btnUndo: "⏪ ลบ Set ล่าสุด",
+                btnNext: "⏭️ ขึ้นท่าใหม่",
+                tableTitle: "📊 ตารางบันทึกเวลา (hh:mm)",
+                tableHeaderDef: "Set / ท่า",
+                btnExport: "📤 ส่งออกข้อมูล (.csv สำหรับ Google Sheet)",
+                emptyExList: "-- กรุณาเพิ่มท่าด้านบนก่อน --",
+                emptyTable: "(ยังไม่มีท่าออกกำลังกาย)",
+                
+                // Modal Completeness
+                modalTitle: "🎉 ยินดีด้วย! ออกกำลังกายครบแล้ว",
+                modalText: "คุณทำครบทุกท่าที่บันทึกไว้ในรายการแล้ว\nต้องการบันทึกข้อมูล หรือเพิ่มท่าใหม่เพื่อเล่นต่อ?",
+                modalBtnExport: "📥 ส่งออกเป็นไฟล์ .csv",
+                modalBtnAdd: "➕ พิมพ์เพิ่มท่าใหม่",
+                modalBtnClose: "❌ ปิดหน้าต่าง",
+
+                // แจ้งเตือน (Alerts & Confirms)
+                errNoName: "กรุณาพิมพ์ชื่อท่าออกกำลังกายครับ",
+                errDupName: "คุณมีท่าออกกำลังกายชื่อนี้อยู่แล้วครับ",
+                errMax: "คุณสามารถบันทึกท่าออกกำลังกายได้สูงสุด 15 ท่าเท่านั้นครับ",
+                errSelectLoad: "กรุณาเลือกกลุ่มท่าที่ต้องการโหลดก่อนครับ",
+                warnLoadClear: "การโหลดกลุ่มท่าใหม่ จะล้างข้อมูลท่าเดิมและเวลาที่คุณเพิ่งบันทึกไว้ทั้งหมด\nคุณต้องการดำเนินการต่อหรือไม่?",
+                errNoExToDelete: "ไม่มีท่าให้ลบครับ",
+                warnDelete: 'คุณแน่ใจหรือไม่ว่าต้องการลบท่า "{ex}" ออกจากรายการ? (ข้อมูลจะหายทั้งหมด)',
+                errNoEx: "กรุณาเพิ่มท่าออกกำลังกายก่อนครับ!",
+                errNoSelect: "กรุณาเลือกท่าออกกำลังกายก่อนครับ!",
+                warnSetMax: 'คุณบันทึกเวลาท่า "{ex}" ครบ 5 เซ็ตแล้วครับ\nหากต้องการบันทึกใหม่ กรุณากด "ลบ Set ล่าสุด" ก่อนครับ',
+                msgDoneSet: '🎉 คุณทำท่า "{ex}" ครบ 5 เซ็ตแล้ว!\nต้องการขึ้นท่าใหม่เลยหรือไม่?',
+                warnUndo: 'ต้องการลบเวลา Set ล่าสุดของท่า "{ex}" ใช่หรือไม่?',
+                errNoUndo: 'ยังไม่มีข้อมูลเวลาของท่า "{ex}" ให้ลบครับ',
+                errRestZero: "เวลาพักเป็น 0 ไม่สามารถจับเวลาได้ครับ",
+                msgRestDone: "หมดเวลาพักแล้ว! เริ่มเซ็ตต่อไปได้เลย 💪",
+                errEndList: "จบท่าล่าสุดแล้วครับ หากต้องการเล่นท่าอื่น กรุณาพิมพ์เพิ่มท่าใหม่ด้านบนครับ",
+                errNoExport: "ไม่มีข้อมูลให้ส่งออกครับ กรุณาเพิ่มท่าและบันทึกเวลาก่อน"
+            },
+            en: {
+                appTitle: "🏋️ Workout Timer & Tracker",
+                lblStep1: "1. Add Exercise (Type or Select Preset):",
+                placeholderInput: "Type exercise name...",
+                btnAdd: "+ Add Custom",
+                optPresetDef: "-- Select Preset Group --",
+                optChest: "💪 Chest-Back Group (8 ex)",
+                optShoulder: "🏋️ Shoulder-Arm Group (9 ex)",
+                optAbs: "🦵 Abs-Leg Group (5 ex)",
+                btnLoad: "📥 Load Preset",
+                lblStep2: "2. Select Current Exercise:",
+                btnDelete: "🗑️ Delete Ex.",
+                lblStep3: "3. Rest Timer (Min : Sec):",
+                placeholderMin: "Min",
+                placeholderSec: "Sec",
+                btnFinish: "✅ Finish Set (Save)",
+                btnStartRest: "⏱️ Start Rest",
+                btnTimerRunning: "Timer Running...",
+                btnUndo: "⏪ Undo Last Set",
+                btnNext: "⏭️ Next Exercise",
+                tableTitle: "📊 Time Tracking Table (hh:mm)",
+                tableHeaderDef: "Set / Exercise",
+                btnExport: "📤 Export Data (.csv for Google Sheets)",
+                emptyExList: "-- Please add exercise above --",
+                emptyTable: "(No exercises yet)",
+                
+                // Modal Completeness
+                modalTitle: "🎉 Congratulations! Workout Complete",
+                modalText: "You have finished all recorded exercises.\nDo you want to export data or add more?",
+                modalBtnExport: "📥 Export to .csv",
+                modalBtnAdd: "➕ Add New Exercise",
+                modalBtnClose: "❌ Close",
+
+                // Alerts & Confirms
+                errNoName: "Please enter an exercise name.",
+                errDupName: "This exercise already exists.",
+                errMax: "You can add a maximum of 15 exercises.",
+                errSelectLoad: "Please select a preset group to load.",
+                warnLoadClear: "Loading a preset group will clear all current exercises and tracked times.\nDo you want to continue?",
+                errNoExToDelete: "No exercise to delete.",
+                warnDelete: 'Are you sure you want to delete "{ex}"? (All related data will be lost)',
+                errNoEx: "Please add an exercise first!",
+                errNoSelect: "Please select an exercise first!",
+                warnSetMax: 'You have completed 5 sets for "{ex}".\nTo record a new time, please "Undo Last Set" first.',
+                msgDoneSet: '🎉 You completed 5 sets for "{ex}"!\nMove to the next exercise?',
+                warnUndo: 'Undo the last set for "{ex}"?',
+                errNoUndo: 'No recorded time for "{ex}" to undo.',
+                errRestZero: "Rest time is 0. Timer cannot start.",
+                msgRestDone: "Rest time is over! Start your next set 💪",
+                errEndList: "You've reached the end of the list. Please add a new exercise above.",
+                errNoExport: "No data to export. Please add exercises and record times first."
+            }
+        };
+
+        let currentLang = 'th';
+
+        function t(key, replacements = {}) {
+            let text = i18n[currentLang][key] || key;
+            for (let k in replacements) {
+                text = text.replace(`{${k}}`, replacements[k]);
+            }
+            return text;
+        }
+
+        function changeLanguage() {
+            currentLang = document.getElementById('langSelect').value;
+            
+            document.getElementById('lblStep1').innerText = t('lblStep1');
+            document.getElementById('newExerciseInput').placeholder = t('placeholderInput');
+            document.getElementById('btnAdd').innerText = t('btnAdd');
+            document.getElementById('optPresetDef').innerText = t('optPresetDef');
+            document.getElementById('optChest').innerText = t('optChest');
+            document.getElementById('optShoulder').innerText = t('optShoulder');
+            document.getElementById('optAbs').innerText = t('optAbs');
+            document.getElementById('btnLoad').innerText = t('btnLoad');
+            
+            document.getElementById('lblStep2').innerText = t('lblStep2');
+            document.getElementById('btnDelete').innerText = t('btnDelete');
+            
+            document.getElementById('lblStep3').innerText = t('lblStep3');
+            document.getElementById('restMin').placeholder = t('placeholderMin');
+            document.getElementById('restSec').placeholder = t('placeholderSec');
+            
+            document.getElementById('btnFinish').innerText = t('btnFinish');
+            document.getElementById('btnUndo').innerText = t('btnUndo');
+            document.getElementById('btnNext').innerText = t('btnNext');
+            
+            document.getElementById('tableTitle').innerText = t('tableTitle');
+            document.getElementById('btnExport').innerText = t('btnExport');
+
+            // Update Modal Language
+            document.getElementById('modalTitle').innerText = t('modalTitle');
+            document.getElementById('modalText').innerText = t('modalText');
+            document.getElementById('modalBtnExport').innerText = t('modalBtnExport');
+            document.getElementById('modalBtnAdd').innerText = t('modalBtnAdd');
+            document.getElementById('modalBtnClose').innerText = t('modalBtnClose');
+
+            updateDropdown();
+            updateBtnText();
+            renderTable();
+        }
+
+        // --- Core Application Logic ---
+        let exercises = [];
+        let workoutData = {};
+        let timerInterval;
+
+        const presetGroups = {
+            'chest-back': [
+                'Bench Press', 'Incline Bench Press', 'Decline Bench Press', 
+                'Dip', 'Trap', 'Bent Over Row', 'Cable Row', 'Lat Pull Down'
+            ],
+            'shoulder-arm': [
+                'Shoulder Press', 'Upright Row', 'Side Lateral Raise', 
+                'Front Lateral Raise', 'Rear Lateral Raise', 'Bicep Curl', 
+                'Hammer Curl', 'Triceps Push Down', 'Dumbell Rotation'
+            ],
+            'abs-leg': [
+                'Squat', 'Calf Raise', 'Oblique Side Bend', 
+                'Abs Crunch', 'Dip Bar Leg Raise'
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+            updateBtnText();
+        });
+
+        function loadPresetGroup() {
+            const select = document.getElementById('presetGroupSelect');
+            const groupKey = select.value;
+
+            if (!groupKey) {
+                alert(t('errSelectLoad'));
+                return;
+            }
+
+            if (exercises.length > 0) {
+                if (!confirm(t('warnLoadClear'))) {
+                    select.value = ""; 
+                    return;
+                }
+            }
+
+            const newExercises = presetGroups[groupKey];
+            exercises = [];
+            workoutData = {};
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "00:00";
+            document.getElementById('startTimerBtn').disabled = false;
+            updateBtnText();
+
+            newExercises.forEach(ex => {
+                exercises.push(ex);
+                workoutData[ex] = [];
+            });
+
+            updateDropdown();
+            const exSelect = document.getElementById('exerciseSelect');
+            if (exercises.length > 0) {
+                exSelect.value = exercises[0];
+            }
+
+            renderTable();
+            select.value = ""; 
+        }
+
+        function getRestTimeSeconds() {
+            const m = Math.max(0, parseInt(document.getElementById('restMin').value) || 0);
+            const s = Math.max(0, parseInt(document.getElementById('restSec').value) || 0);
+            return (m * 60) + s;
+        }
+
+        function updateBtnText() {
+            const btn = document.getElementById('startTimerBtn');
+            if (!btn.disabled) {
+                const m = Math.max(0, parseInt(document.getElementById('restMin').value) || 0);
+                const s = Math.max(0, parseInt(document.getElementById('restSec').value) || 0);
+                btn.innerText = `${t('btnStartRest')} (${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')})`;
+            } else {
+                btn.innerText = t('btnTimerRunning');
+            }
+        }
+
+        function addExercise() {
+            const input = document.getElementById('newExerciseInput');
+            const newName = input.value.trim();
+
+            if (!newName) { alert(t('errNoName')); return; }
+            if (exercises.includes(newName)) { alert(t('errDupName')); return; }
+            if (exercises.length >= 15) { alert(t('errMax')); return; }
+
+            exercises.push(newName);
+            workoutData[newName] = [];
+            input.value = "";
+            
+            updateDropdown();
+            
+            // บังคับให้ Dropdown สลับไปยังท่าที่เพิ่งเพิ่มใหม่ทันที
+            document.getElementById('exerciseSelect').value = newName;
+            
+            renderTable();
+        }
+
+        function deleteExercise() {
+            const select = document.getElementById('exerciseSelect');
+            const exerciseToDelete = select.value;
+
+            if (!exerciseToDelete) { alert(t('errNoExToDelete')); return; }
+
+            if (confirm(t('warnDelete', {ex: exerciseToDelete}))) {
+                exercises = exercises.filter(ex => ex !== exerciseToDelete);
+                delete workoutData[exerciseToDelete];
+
+                clearInterval(timerInterval);
+                document.getElementById('timer').innerText = "00:00";
+                document.getElementById('startTimerBtn').disabled = false;
+                updateBtnText();
+
+                updateDropdown();
+                renderTable();
+            }
+        }
+
+        function updateDropdown() {
+            const select = document.getElementById('exerciseSelect');
+            const currentValue = select.value;
+            select.innerHTML = ''; 
+
+            if (exercises.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.disabled = true;
+                option.selected = true;
+                option.innerText = t('emptyExList');
+                select.appendChild(option);
+                return;
+            }
+
+            exercises.forEach(ex => {
+                const option = document.createElement('option');
+                option.value = ex;
+                option.innerText = ex;
+                select.appendChild(option);
+            });
+
+            if (exercises.includes(currentValue)) {
+                select.value = currentValue; 
+            } else if (exercises.length > 0) {
+                select.value = exercises[exercises.length - 1]; 
+            }
+        }
+
+        // --- ฟังก์ชัน Modal ควบคุมการเสร็จสิ้น ---
+        function showCompletionModal() {
+            document.getElementById('completionModal').style.display = 'flex';
+        }
+
+        function closeCompletionModal() {
+            document.getElementById('completionModal').style.display = 'none';
+        }
+
+        function modalExportCSV() {
+            exportToCSV();
+            closeCompletionModal();
+        }
+
+        function modalAddNew() {
+            closeCompletionModal();
+            const input = document.getElementById('newExerciseInput');
+            input.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function finishSet() {
+            if (exercises.length === 0) { alert(t('errNoEx')); return; }
+            const select = document.getElementById('exerciseSelect');
+            const currentExercise = select.value;
+
+            if (!currentExercise) { alert(t('errNoSelect')); return; }
+
+            if (workoutData[currentExercise].length >= 5) {
+                alert(t('warnSetMax', {ex: currentExercise}));
+                return;
+            }
+
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}`;
+
+            workoutData[currentExercise].push(timeString);
+            renderTable();
+            
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "00:00";
+            const btn = document.getElementById('startTimerBtn');
+            btn.disabled = false;
+            updateBtnText();
+
+            // เช็คว่าทำครบ 5 เซ็ต
+            if (workoutData[currentExercise].length === 5) {
+                setTimeout(() => {
+                    const currentIndex = exercises.indexOf(currentExercise);
+                    // ถ้านี่คือท่าสุดท้ายในรายการ
+                    if (currentIndex === exercises.length - 1) {
+                        showCompletionModal(); // เรียกใช้ Modal แทน confirm ปกติ
+                    } else {
+                        // ถ้ายังมีท่าถัดไปรออยู่
+                        if (confirm(t('msgDoneSet', {ex: currentExercise}))) { nextExercise(); }
+                    }
+                }, 150);
+            }
+        }
+
+        function undoLastSet() {
+            const select = document.getElementById('exerciseSelect');
+            const currentExercise = select.value;
+
+            if (!currentExercise) { alert(t('errNoSelect')); return; }
+
+            if (workoutData[currentExercise].length > 0) {
+                if (confirm(t('warnUndo', {ex: currentExercise}))) {
+                    workoutData[currentExercise].pop();
+                    renderTable();
+                }
+            } else {
+                alert(t('errNoUndo', {ex: currentExercise}));
+            }
+        }
+
+        function startRestTimerClick() {
+            const restSeconds = getRestTimeSeconds();
+            if (restSeconds > 0) {
+                startRestTimer(restSeconds);
+            } else {
+                alert(t('errRestZero'));
+            }
+        }
+
+        function startRestTimer(totalSeconds) {
+            clearInterval(timerInterval);
+            let timeLeft = totalSeconds;
+            updateTimerDisplay(timeLeft);
+
+            const btn = document.getElementById('startTimerBtn');
+            btn.disabled = true;
+            updateBtnText(); 
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerComplete(btn);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            document.getElementById('timer').innerText = 
+                `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function timerComplete(btn) {
+            setTimeout(() => { alert(t('msgRestDone')); }, 100);
+            btn.disabled = false;
+            updateBtnText();
+            document.getElementById('timer').innerText = "00:00";
+        }
+
+        function nextExercise() {
+            if (exercises.length === 0) { alert(t('errNoEx')); return; }
+
+            const select = document.getElementById('exerciseSelect');
+            const currentIndex = exercises.indexOf(select.value);
+
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "00:00";
+            
+            const btn = document.getElementById('startTimerBtn');
+            btn.disabled = false;
+            updateBtnText();
+
+            if (currentIndex >= 0 && currentIndex < exercises.length - 1) {
+                select.value = exercises[currentIndex + 1];
+            } else {
+                alert(t('errEndList'));
+                document.getElementById('newExerciseInput').focus();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function renderTable() {
+            const tableHeader = document.getElementById('tableHeader');
+            const tableBody = document.getElementById('tableBody');
+
+            tableHeader.innerHTML = `<th>${t('tableHeaderDef')}</th>`;
+            
+            if (exercises.length === 0) {
+                const th = document.createElement('th');
+                th.innerHTML = `<span class="empty-state">${t('emptyTable')}</span>`;
+                tableHeader.appendChild(th);
+            } else {
+                exercises.forEach(ex => {
+                    const th = document.createElement('th');
+                    th.innerText = ex;
+                    tableHeader.appendChild(th);
+                });
+            }
+
+            tableBody.innerHTML = '';
+            const MAX_SETS = 5;
+
+            for (let setIndex = 0; setIndex < MAX_SETS; setIndex++) {
+                const tr = document.createElement('tr');
+                
+                const tdSetNum = document.createElement('td');
+                tdSetNum.innerHTML = `<strong>Set ${setIndex + 1}</strong>`;
+                tr.appendChild(tdSetNum);
+
+                if (exercises.length === 0) {
+                    const td = document.createElement('td');
+                    td.innerHTML = '<span class="empty-cell">-</span>';
+                    tr.appendChild(td);
+                } else {
+                    exercises.forEach(ex => {
+                        const td = document.createElement('td');
+                        const timeArr = workoutData[ex];
+                        
+                        if (setIndex < timeArr.length) {
+                            td.innerText = timeArr[setIndex];
+                        } else {
+                            td.innerHTML = '<span class="empty-cell">-</span>';
+                        }
+                        tr.appendChild(td);
+                    });
+                }
+                tableBody.appendChild(tr);
+            }
+        }
+
+        function exportToCSV() {
+            if (exercises.length === 0) { alert(t('errNoExport')); return; }
+
+            let csvContent = "\uFEFFSet," + exercises.join(",") + "\n";
+            const MAX_SETS = 5;
+
+            for (let i = 0; i < MAX_SETS; i++) {
+                let row = [`Set ${i + 1}`];
+                exercises.forEach(ex => {
+                    const timeArr = workoutData[ex];
+                    row.push(i < timeArr.length ? timeArr[i] : "-");
+                });
+                csvContent += row.join(",") + "\n";
+            }
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("download", `Workout_Data_${dateStr}.csv`);
+            link.style.display = 'none';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
